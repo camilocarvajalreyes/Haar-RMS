@@ -3,3 +3,4 @@
 
 # ignorar archivos
 PymeNaranja.xlsx
+*.pyc
