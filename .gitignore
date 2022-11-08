@@ -1,0 +1,5 @@
+# ignorar checkpoints
+.ipynb_checkpoints/
+
+# ignorar archivos
+PymeNaranja.xlsx
