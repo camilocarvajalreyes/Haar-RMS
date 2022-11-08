@@ -3,6 +3,20 @@ import numpy as np
 import matplotlib as mtpl
 import matplotlib.pyplot as plt
 font = {'family' : 'serif','weight' : 'ultralight','size'   : 14};mtpl.rc('font', **font)
+import time
+import math
+
+def timeSince(since):
+    now = time.time()
+    s = now - since
+    m = math.floor(s/60)
+    s -= m*60
+    if m < 60:
+        return '%dm %ds' % (m, s)
+    else:
+        h = math.floor(m/60)
+        m -= h*60
+        return '%dh %dm %ds' % (h, m, s)
 
 
 class Haar:
@@ -39,7 +53,23 @@ class Haar:
         for i in range(1,len(self.deltas_t)+1):  # for all my deltas_t (all steps-differences, de 1 en 1, de 2 en 2, etc)
             self.epsilons.append(self.deltas_t[i-1][:-i]/(self.deltas_t[i-1][:-i]+self.deltas_t[i-1][i:]))
     
-    def fluctuations(self,ep_min=0.25,calib=2,verbose=True):
+    def fluctuations(self,ep_min=0.25,calib=2,verbose=True,prop_print=500):
+        """
+        Computing fluctuations
+        
+        Arguments:
+            ep_min: float
+                default 0.25
+                
+            calib: int
+                default 2
+                
+            verbose: boolean
+                whether or not to print progress and deleted fluctuations
+            
+            prop_print: int
+                how often do we print the progress, default 500
+        """
         self.x = self.x[:-1]
         self.t = self.t[:-1]
         #Cálculo fluctuaciones
@@ -51,6 +81,8 @@ class Haar:
         self.delta_t = [] 
         counter = 0
 
+        start_time = time.time()
+
         for H in range(2,len(self.x)-1,2):
             for start in range(len(self.x)-H-1):
                 int1 = np.sum(self.x[start:start+int(H/2)]*self.deltas_t[0][start:start+int(H/2)]/self.deltas_t[int(H/2)-1][start])
@@ -60,8 +92,13 @@ class Haar:
                     # Hs.append(calib*abs(int2-int1))  # S_1
                     self.Hs.append((calib*(int2 - int1))**2)  # S_2 (falta despues sacar raíz)
                     self.delta_t.append(self.deltas_t[int(H/2)-1][start] + self.deltas_t[int(H/2)-1][start+int(H/2)])  # No logaritmicos
+            if verbose:
+                prop = 100*H / (len(self.x) - 1)
+                if H % prop_print  == 0:
+                    print("Progress: {}%, time elapsed {}".format('%.3f'%(prop),timeSince(start_time)))
         
         if verbose:
+            print("Finished computations in {}".format(timeSince(start_time)))
             perct = (counter - len(self.Hs))/counter*100
             perct = '%.3f'%(perct)
             print("{} fluctuaciones eliminadas ({}%)".format(counter - len(self.Hs),perct))
